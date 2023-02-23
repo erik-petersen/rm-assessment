@@ -13,6 +13,7 @@ require 'json'
 require 'date'
 require 'time'
 require 'ascii_charts'
+require 'colorize'
 
 # assign variables
 geo_data = []
@@ -63,7 +64,7 @@ puts "#{weather_data['localtime'][0,10]}"
 puts "#{Time.parse(weather_data['localtime'][11,5]).strftime("%l:%M%P")}", "\n\n"
 
 # display current weather
-puts "Your Current Weather"
+puts "Your Current Weather\n\n".upcase.red
 puts "Temperature: #{weather_json['current']['temp_f']} F"
 puts "High: #{weather_json['forecast']['forecastday'][0]['day']['maxtemp_f']} F / Low: #{weather_json['forecast']['forecastday'][0]['day']['mintemp_f']} F"
 puts "Condition: #{weather_json['current']['condition']['text']}"
@@ -71,20 +72,19 @@ puts "Windspeed: #{weather_json['current']['wind_mph']} mph"
 puts "Humidity: #{weather_json['current']['humidity']}%"
 puts "Feels Like: #{weather_json['current']['feelslike_f']} F"
 puts "Visibility: #{weather_json['current']['vis_miles']} miles"
-puts "UV Index: #{weather_json['current']['uv']}"
 
-puts  "\n\n", "Your 7 Day Forecast"
+puts  "\n\n", "Your 7 Day Forecast\n\n".upcase.red
 
 # display 7 day forecast data
 weather_json['forecast']['forecastday'].each { |moniker, worth|
 
   # if the date is today's date, put "Today", otherwise put the date
   if moniker['date'] == Time.now.to_s[0,10]
-    puts "Today:"
+    puts "Today:\n\n".upcase
   # add dates to forecast_dates
   else
     puts "#{Time.parse(moniker['date'][0,10]).strftime("%A")}"
-    puts "#{moniker['date']}"
+    puts "#{moniker['date']}\n\n"
     if moniker['date']
       forecast_dates.push(moniker['date'])
     end
@@ -94,14 +94,26 @@ weather_json['forecast']['forecastday'].each { |moniker, worth|
   min_temps.push(moniker['day']['mintemp_f'])
   puts "High: #{moniker['day']['maxtemp_f']} F / Low: #{moniker['day']['mintemp_f']} F"
   puts "Condition: #{moniker['day']['condition']['text']}"
-  puts "This Is Your Condition Icon For The Day: #{moniker['day']['condition']['icon']} We'll Give You Another One Tomorrow"
+  puts "This Is Your Condition Icon For The Day: #{moniker['day']['condition']['icon']} We'll Give You Another One Tomorrow For Only $100"
   puts "Chance of Rain: #{moniker['day']['daily_chance_of_rain']}%"
   puts "Sunrise: #{moniker['astro']['sunrise']}"
   puts "Sunset: #{moniker['astro']['sunset']}"
   puts "Moonrise: #{moniker['astro']['moonrise']}"
-  puts "Moonset: #{moniker['astro']['moonset']} \n\n"
+  puts "Moonset: #{moniker['astro']['moonset']}"
+  # display UV Index with text and color that relates to the index according to epa
+  if moniker['day']['uv'] < 3
+    puts "UV Index #{moniker['day']['uv'].to_s.chr}: Low\n\n".green
+  elsif moniker['day']['uv'] in 3..5
+    puts "UV Index #{moniker['day']['uv'].to_s.chr}: Moderate\n\n".yellow
+  elsif moniker['day']['uv'] in 6..7
+    puts "UV Index #{moniker['day']['uv'].to_s.chr}: High\n\n".orange
+  elsif moniker['day']['uv'] in 8..10
+    puts "UV Index #{moniker['day']['uv'].to_s.chr}: Very High\n\n".red
+  else
+    puts "UV Index #{moniker['day']['uv'].to_s.chr}: Extreme\n\n".purple
+  end
 
-  puts "Hourly:"
+  puts "Hourly:\n\n"
   # display hourly data for the day with nested loop
   i = 0
   while i < 24
@@ -118,7 +130,7 @@ weather_json['forecast']['forecastday'].each { |moniker, worth|
     puts "Precipitation: #{moniker['hour'][i]['precip_in']} in "
     puts "Dewpoint: #{moniker['hour'][i]['dewpoint_f']} F"
     puts "Visibility: #{moniker['hour'][i]['vis_miles']} miles"
-    puts "Barometric Pressure: #{moniker['hour'][i]['pressure_in']} in"
+    puts "Barometric Pressure: #{moniker['hour'][i]['pressure_in']} inHg"
     puts "\n"
     i += 1
   end # end display hourly data loop
@@ -134,4 +146,5 @@ while i < 6
 end
 
 # bar chart of high temps for 7 days
-puts AsciiCharts::Cartesian.new([ ["Today",max_temps[0]], [bar[0],max_temps[1]], [bar[1],max_temps[2]], [bar[2],max_temps[3]], [bar[3],max_temps[4]], [bar[4],max_temps[5]], [bar[5],max_temps[6]] ], :bar => true, :hide_zero => true).draw
+puts "Daily Highs For The Week".upcase.red
+puts AsciiCharts::Cartesian.new([ ["Today",max_temps[0], "F"], [bar[0],max_temps[1]], [bar[1],max_temps[2]], [bar[2],max_temps[3]], [bar[3],max_temps[4]], [bar[4],max_temps[5]], [bar[5],max_temps[6]] ], :bar => true, :hide_zero => true).draw
