@@ -10,11 +10,18 @@ require 'net/http'
 require 'net/https'
 require 'uri'
 require 'json'
+require 'date'
+require 'time'
+require 'ascii_charts'
 
 # assign variables
 geo_data = []
+max_temps = []
+min_temps = []
+forecast_dates = []
 weather_data = Hash.new # thank you, https://ruby-doc.org/core-2.4.1/Hash.html
 weather_forecast = Hash.new
+
 puts ""
 
 # fetch geolocation data
@@ -53,7 +60,7 @@ weather_json['location'].each { |moniker, worth|
 # display location data
 puts "#{weather_data['name']}, #{weather_data['region']}"
 puts "#{weather_data['localtime'][0,10]}"
-puts "#{weather_data['localtime'][11,5]}", "\n\n"
+puts "#{Time.parse(weather_data['localtime'][11,5]).strftime("%l:%M%P")}", "\n\n"
 
 # display current weather
 puts "Your Current Weather"
@@ -74,10 +81,17 @@ weather_json['forecast']['forecastday'].each { |moniker, worth|
   # if the date is today's date, put "Today", otherwise put the date
   if moniker['date'] == Time.now.to_s[0,10]
     puts "Today:"
+  # add dates to forecast_dates
   else
-    puts "Date: #{moniker['date']}"
+    puts "#{Time.parse(moniker['date'][0,10]).strftime("%A")}"
+    puts "#{moniker['date']}"
+    if moniker['date']
+      forecast_dates.push(moniker['date'])
+    end
   end # Today vs Date
 
+  max_temps.push(moniker['day']['maxtemp_f'])
+  min_temps.push(moniker['day']['mintemp_f'])
   puts "High: #{moniker['day']['maxtemp_f']} F / Low: #{moniker['day']['mintemp_f']} F"
   puts "Condition: #{moniker['day']['condition']['text']}"
   puts "This Is Your Condition Icon For The Day: #{moniker['day']['condition']['icon']} We'll Give You Another One Tomorrow"
@@ -91,7 +105,7 @@ weather_json['forecast']['forecastday'].each { |moniker, worth|
   # display hourly data for the day with nested loop
   i = 0
   while i < 24
-    puts moniker['hour'][i]['time'][11,5]
+    puts Time.parse(moniker['hour'][i]['time'][11,5]).strftime("%l:%M%P")
     puts "Condition: #{moniker['hour'][i]['condition']['text']}"
     puts "Condition Icon: #{moniker['hour'][i]['condition']['icon']}"
     puts "Temperature: #{moniker['hour'][i]['temp_f']} F"
@@ -110,3 +124,14 @@ weather_json['forecast']['forecastday'].each { |moniker, worth|
   end # end display hourly data loop
 
 } # end display 7 day forecast
+
+# assign next 6 days of the week in the 7 day forecast
+bar = []
+i = 0
+while i < 6
+  bar.push(Time.parse(forecast_dates[i][0,10]).strftime("%A")) # thank you, https://stackoverflow.com/a/23133449
+  i += 1
+end
+
+# bar chart of high temps for 7 days
+puts AsciiCharts::Cartesian.new([ ["Today",max_temps[0]], [bar[0],max_temps[1]], [bar[1],max_temps[2]], [bar[2],max_temps[3]], [bar[3],max_temps[4]], [bar[4],max_temps[5]], [bar[5],max_temps[6]] ], :bar => true, :hide_zero => true).draw
