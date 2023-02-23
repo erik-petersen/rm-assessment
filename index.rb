@@ -64,7 +64,7 @@ puts "#{weather_data['localtime'][0,10]}"
 puts "#{Time.parse(weather_data['localtime'][11,5]).strftime("%l:%M%P")}", "\n\n"
 
 # display current weather
-puts "Your Current Weather\n\n".upcase.red
+puts "Your Current Weather\n\n".upcase.red # thank you, https://stackoverflow.com/a/1489233, for the colorize gem
 puts "Temperature: #{weather_json['current']['temp_f']} F"
 puts "High: #{weather_json['forecast']['forecastday'][0]['day']['maxtemp_f']} F / Low: #{weather_json['forecast']['forecastday'][0]['day']['mintemp_f']} F"
 puts "Condition: #{weather_json['current']['condition']['text']}"
